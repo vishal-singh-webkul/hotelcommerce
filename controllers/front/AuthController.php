@@ -456,6 +456,14 @@ class AuthControllerCore extends FrontController
                 }
             }
             // End
+            if (!Configuration::get('PS_CUSTOMER_ADDRESS_CREATION')) {
+                if (($required_fields = $customer->getFieldsRequiredDatabase()) && count($required_fields)) {
+                    foreach ($required_fields as $field) {
+                        $_POST[$field['field_name']] = 1;
+                    }
+                }
+            }
+
             $this->errors = array_unique(array_merge($this->errors, $customer->validateController()));
 
             // Check the requires fields which are settings in the BO
