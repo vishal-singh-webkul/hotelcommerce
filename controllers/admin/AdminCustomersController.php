@@ -601,7 +601,7 @@ class AdminCustomersControllerCore extends AdminController
         }
 
         $birthday = explode('-', $this->getFieldValue($obj, 'birthday'));
-        
+
         $this->fields_value = array(
             'years' => Tools::getValue('years', $this->getFieldValue($obj, 'birthday') ? $birthday[0] : 0),
             'months' => Tools::getValue('months', $this->getFieldValue($obj, 'birthday') ? $birthday[1] : 0),
@@ -1062,7 +1062,7 @@ class AdminCustomersControllerCore extends AdminController
         $days = Tools::getValue('days');
         $months = Tools::getValue('months');
         $years = Tools::getValue('years');
-        
+
         if ($days || $months || $years) {
             if (!$days) {
                 $this->errors[] = Tools::displayError("Please select a valid date of birthday");
@@ -1074,10 +1074,10 @@ class AdminCustomersControllerCore extends AdminController
                 $this->errors[] = Tools::displayError("Please select a valid month of birthday");
             }
         }
-        
+
         $customer = new Customer();
         $this->errors = array_merge($this->errors, $customer->validateFieldsRequiredDatabase());
-        
+
         return parent::processSave();
     }
 
@@ -1258,4 +1258,30 @@ class AdminCustomersControllerCore extends AdminController
             die('ok');
         }
     }
+
+    public function setMedia()
+    {
+        parent::setMedia();
+        if ($this->display == 'view') {
+            $jsVars = array(
+                'display_name' => $this->l('Display', null, true),
+                'records_name' => $this->l('records per page', null, true),
+                'no_product' => $this->l('No records found', null, true),
+                'show_page' => $this->l('Showing page', null, true),
+                'show_of' => $this->l('of', null, true),
+                'no_record' => $this->l('No records available', null, true),
+                'filter_from' => $this->l('filtered from', null, true),
+                't_record' => $this->l('total records', null, true),
+                'search_item' => $this->l('Search', null, true),
+                'p_page' => $this->l('Previous', null, true),
+                'n_page' => $this->l('Next', null, true),
+            );
+
+            Media::addJsDef($jsVars);
+            $this->addJS(_PS_JS_DIR_.'/datatable/jquery.dataTables.min.js');
+            $this->addJS(_PS_JS_DIR_.'/datatable/dataTables.bootstrap.js');
+            $this->addJS(_PS_JS_DIR_.'admin/customer.js');
+        }
+    }
+
 }

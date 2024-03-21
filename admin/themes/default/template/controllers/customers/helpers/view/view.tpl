@@ -202,63 +202,73 @@
 					</div>
 
 					{if $count_ok}
-						<table class="table">
-							<thead>
-								<tr>
-									<th class="center"><span class="title_box ">{l s='ID'}</span></th>
-									<th><span class="title_box">{l s='Date'}</span></th>
-									<th><span class="title_box">{l s='Payment'}</span></th>
-									<th><span class="title_box">{l s='Status'}</span></th>
-									<th><span class="title_box">{l s='Products'}</span></th>
-									<th><span class="title_box ">{l s='Total spent'}</span></th>
-									<th></th>
-								</tr>
-							</thead>
-							<tbody>
-							{foreach $orders_ok AS $key => $order}
-								<tr onclick="document.location = '?tab=AdminOrders&amp;id_order={$order['id_order']|intval}&amp;vieworder&amp;token={getAdminToken tab='AdminOrders'}'">
-									<td>{$order['id_order']}</td>
-									<td>{dateFormat date=$order['date_add'] full=0}</td>
-									<td>{$order['payment']}</td>
-									<td>{$order['order_state']}</td>
-									<td>{$order['nb_products']}</td>
-									<td>{$order['total_paid_real']}</td>
-									<td>
-										<a class="btn btn-default" href="?tab=AdminOrders&amp;id_order={$order['id_order']|intval}&amp;vieworder&amp;token={getAdminToken tab='AdminOrders'}">
-											<i class='icon-search'></i> {l s='View'}
-										</a>
-									</td>
-								</tr>
-							{/foreach}
-							</tbody>
-						</table>
+						<div class="panel">
+							<div class="panel-heading">
+								<i class="icon-file"></i> {l s='Valid orders'} <span class="badge">{$count_ok}</span>
+							</div>
+							<table class="table wk-customer-data-table">
+								<thead>
+									<tr>
+										<th class="center"><span class="title_box ">{l s='ID'}</span></th>
+										<th><span class="title_box">{l s='Date'}</span></th>
+										<th><span class="title_box">{l s='Payment'}</span></th>
+										<th><span class="title_box">{l s='Status'}</span></th>
+										<th><span class="title_box">{l s='Products'}</span></th>
+										<th><span class="title_box ">{l s='Total spent'}</span></th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+								{foreach $orders_ok AS $key => $order}
+									<tr onclick="document.location = '?tab=AdminOrders&amp;id_order={$order['id_order']|intval}&amp;vieworder&amp;token={getAdminToken tab='AdminOrders'}'">
+										<td>{$order['id_order']}</td>
+										<td>{dateFormat date=$order['date_add'] full=0}</td>
+										<td>{$order['payment']}</td>
+										<td>{$order['order_state']}</td>
+										<td>{$order['nb_products']}</td>
+										<td>{$order['total_paid_real']}</td>
+										<td>
+											<a class="btn btn-default" href="?tab=AdminOrders&amp;id_order={$order['id_order']|intval}&amp;vieworder&amp;token={getAdminToken tab='AdminOrders'}">
+												<i class='icon-search'></i> {l s='View'}
+											</a>
+										</td>
+									</tr>
+								{/foreach}
+								</tbody>
+							</table>
+						</div>
 					{/if}
 
 					{if $count_ko}
-						<table class="table">
-							<thead>
-								<tr>
-									<th><span class="title_box ">{l s='ID'}</span></th>
-									<th><span class="title_box ">{l s='Date'}</span></th>
-									<th><span class="title_box ">{l s='Payment'}</span></th>
-									<th><span class="title_box ">{l s='Status'}</span></th>
-									<th><span class="title_box ">{l s='Products'}</span></th>
-									<th><span class="title_box ">{l s='Total spent'}</span></th>
-								</tr>
-							</thead>
-							<tbody>
-								{foreach $orders_ko AS $key => $order}
-								<tr onclick="document.location = '?tab=AdminOrders&amp;id_order={$order['id_order']|intval}&amp;vieworder&amp;token={getAdminToken tab='AdminOrders'}'">
-									<td>{$order['id_order']}</td>
-									<td><a href="?tab=AdminOrders&amp;id_order={$order['id_order']}&amp;vieworder&amp;token={getAdminToken tab='AdminOrders'}">{dateFormat date=$order['date_add'] full=0}</a></td>
-									<td>{$order['payment']}</td>
-									<td>{$order['order_state']}</td>
-									<td>{$order['nb_products']}</td>
-									<td>{$order['total_paid_real']}</td>
-								</tr>
-								{/foreach}
-							</tbody>
-						</table>
+						<div class="panel">
+							<div class="panel-heading">
+								<i class="icon-file"></i> {l s='Invalid orders'} <span class="badge">{$count_ko}</span>
+							</div>
+							<table class="table wk-customer-data-table">
+								<thead>
+									<tr>
+										<th><span class="title_box ">{l s='ID'}</span></th>
+										<th><span class="title_box ">{l s='Date'}</span></th>
+										<th><span class="title_box ">{l s='Payment'}</span></th>
+										<th><span class="title_box ">{l s='Status'}</span></th>
+										<th><span class="title_box ">{l s='Products'}</span></th>
+										<th><span class="title_box ">{l s='Total spent'}</span></th>
+									</tr>
+								</thead>
+								<tbody>
+									{foreach $orders_ko AS $key => $order}
+									<tr onclick="document.location = '?tab=AdminOrders&amp;id_order={$order['id_order']|intval}&amp;vieworder&amp;token={getAdminToken tab='AdminOrders'}'">
+										<td>{$order['id_order']}</td>
+										<td><a href="?tab=AdminOrders&amp;id_order={$order['id_order']}&amp;vieworder&amp;token={getAdminToken tab='AdminOrders'}">{dateFormat date=$order['date_add'] full=0}</a></td>
+										<td>{$order['payment']}</td>
+										<td>{$order['order_state']}</td>
+										<td>{$order['nb_products']}</td>
+										<td>{$order['total_paid_real']}</td>
+									</tr>
+									{/foreach}
+								</tbody>
+							</table>
+						</div>
 					{/if}
 				{else}
 				<p class="text-muted text-center">
@@ -272,7 +282,7 @@
 					<i class="icon-shopping-cart"></i> {l s='Carts'} <span class="badge">{count($carts)}</span>
 				</div>
 				{if $carts AND count($carts)}
-					<table class="table">
+					<table class="table wk-customer-data-table">
 						<thead>
 							<tr>
 								<th><span class="title_box ">{l s='ID'}</span></th>
@@ -307,7 +317,7 @@
 				<div class="panel-heading">
 					<i class="icon-archive"></i> {l s='Purchased products'} <span class="badge">{count($products)}</span>
 				</div>
-				<table class="table">
+				<table class="table wk-customer-data-table">
 					<thead>
 						<tr>
 							<th><span class="title_box">{l s='Date'}</span></th>
@@ -336,7 +346,7 @@
 				<div class="panel-heading">
 					<i class="icon-eye"></i> {l s='Viewed room types'} <span class="badge">{count($interested)}</span>
 				</div>
-				<table class="table">
+				<table class="table wk-customer-data-table">
 					<thead>
 						<tr>
 							<th><span class="title_box ">{l s='ID'}</span></th>
@@ -384,7 +394,7 @@
 					<i class="icon-envelope"></i> {l s='Messages'} <span class="badge">{count($messages)}</span>
 				</div>
 				{if count($messages)}
-					<table class="table">
+					<table class="table wk-customer-data-table">
 						<thead>
 							<th><span class="title_box">{l s='Status'}</span></th>
 							<th><span class="title_box">{l s='Message'}</span></th>
@@ -413,7 +423,7 @@
 					<i class="icon-ticket"></i> {l s='Vouchers'} <span class="badge">{count($discounts)}</span>
 				</div>
 				{if count($discounts)}
-					<table class="table">
+					<table class="table wk-customer-data-table">
 						<thead>
 							<tr>
 								<th><span class="title_box">{l s='ID'}</span></th>
@@ -422,33 +432,33 @@
 								<th><span class="title_box">{l s='Status'}</span></th>
 								<th><span class="title_box">{l s='Qty available'}</span></th>
 								<th><span class="title_box">{l s='Actions'}</span></th>
-							<tr/>
+							</tr>
 						</thead>
 						<tbody>
-					{foreach $discounts AS $key => $discount}
-							<tr>
-								<td>{$discount['id_cart_rule']}</td>
-								<td>{$discount['code']}</td>
-								<td>{$discount['name']}</td>
-								<td>
-									{if $discount['active']}
-										<i class="icon-check"></i>
-									{else}
-										<i class="icon-remove"></i>
-									{/if}
-								</td>
-								<td>{if $discount['quantity'] > 0}{$discount['quantity_for_user']|intval}{else}0{/if}</td>
-								<td>
-									<a href="?tab=AdminCartRules&amp;id_cart_rule={$discount['id_cart_rule']|intval}&amp;addcart_rule&amp;token={getAdminToken tab='AdminCartRules'}&amp;back={$smarty.server.REQUEST_URI|urlencode}">
-										<i class="icon-pencil"></i>
-									</a>
-									<a href="?tab=AdminCartRules&amp;id_cart_rule={$discount['id_cart_rule']|intval}&amp;deletecart_rule&amp;token={getAdminToken tab='AdminCartRules'}&amp;back={$smarty.server.REQUEST_URI|urlencode}">
-										<i class="icon-remove"></i>
-									</a>
-								</td>
-							</tr>
+							{foreach $discounts AS $key => $discount}
+								<tr>
+									<td>{$discount['id_cart_rule']}</td>
+									<td>{$discount['code']}</td>
+									<td>{$discount['name']}</td>
+									<td>
+										{if $discount['active']}
+											<i class="icon-check"></i>
+										{else}
+											<i class="icon-remove"></i>
+										{/if}
+									</td>
+									<td>{if $discount['quantity'] > 0}{$discount['quantity_for_user']|intval}{else}0{/if}</td>
+									<td>
+										<a href="?tab=AdminCartRules&amp;id_cart_rule={$discount['id_cart_rule']|intval}&amp;addcart_rule&amp;token={getAdminToken tab='AdminCartRules'}&amp;back={$smarty.server.REQUEST_URI|urlencode}">
+											<i class="icon-pencil"></i>
+										</a>
+										<a href="?tab=AdminCartRules&amp;id_cart_rule={$discount['id_cart_rule']|intval}&amp;deletecart_rule&amp;token={getAdminToken tab='AdminCartRules'}&amp;back={$smarty.server.REQUEST_URI|urlencode}">
+											<i class="icon-remove"></i>
+										</a>
+									</td>
+								</tr>
+							{/foreach}
 						</tbody>
-					{/foreach}
 					</table>
 				{else}
 				<p class="text-muted text-center">
@@ -462,7 +472,7 @@
 				<div class="panel-heading">
 					<i class="icon-envelope"></i> {l s='Last emails'}
 				</div>
-				<table class="table">
+				<table class="table wk-customer-data-table">
 					<thead>
 					<tr>
 						<th><span class="title_box">{l s='Date'}</span></th>
@@ -490,7 +500,7 @@
 				<div class="panel-heading">
 					<i class="icon-time"></i> {l s='Last connections'}
 				</div>
-				<table class="table">
+				<table class="table wk-customer-data-table">
 					<thead>
 					<tr>
 						<th><span class="title_box">{l s='ID'}</span></th>
@@ -527,7 +537,7 @@
 					</a>
 				</div>
 				{if $groups AND count($groups)}
-				<table class="table">
+				<table class="table wk-customer-data-table">
 					<thead>
 						<tr>
 							<th><span class="title_box ">{l s='ID'}</span></th>
@@ -562,7 +572,7 @@
 				<div class="panel-heading">
 					<i class="icon-share-alt"></i> {l s='Referrers'}
 				</div>
-				<table class="table">
+				<table class="table wk-customer-data-table">
 					<thead>
 						<tr>
 							<th><span class="title_box ">{l s='Date'}</span></th>
