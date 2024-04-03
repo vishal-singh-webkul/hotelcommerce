@@ -751,7 +751,10 @@ class ProductControllerCore extends FrontController
         // calculate total price
         $totalPrice = $totalRoomPrice + $demandsPrice;
         // send occupancy information searched by the user
-        if ($occupancy && is_array($occupancy)) {
+        if ($occupancy
+            && is_array($occupancy)
+            && (Configuration::get('WK_ROOM_PREFILLED_DEFAULT_OCCPANCY') == HotelBookingDetail::WK_ROOM_PREFILLED_DEFAULT_OCCPANCY_BASE || $this->ajax)
+        ) {
             $smartyVars['occupancies'] = $occupancy;
             $smartyVars['occupancy_adults'] = array_sum(array_column($occupancy, 'adults'));
             $smartyVars['occupancy_children'] = array_sum(array_column($occupancy, 'children'));

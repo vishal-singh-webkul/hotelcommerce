@@ -214,6 +214,17 @@ class AdminPPreferencesControllerCore extends AdminController
                         'class' => 'fixed-width-xxl',
                         'visibility' => Shop::CONTEXT_ALL,
                     ),
+                    'WK_ROOM_PREFILLED_DEFAULT_OCCPANCY' => array(
+                        'title' => $this->l('Select the pre-filled occupancy option for the room'),
+                        'hint' => $this->l('Select the default pre-filled occupancy for the room. In the "Room type base occupancy" option, the occupancy field will automatically display the base occupancy of the selected room type. In the "Without Occupancy" option, the occupancy field will prompt users to select the occupancy for the room.'),
+                        'cast' => 'intval',
+                        'type' => 'select',
+                        'list' => array(
+                            array('id' => HotelBookingDetail::WK_ROOM_PREFILLED_DEFAULT_OCCPANCY_BASE, 'name' => $this->l('Room type base occupancy')),
+                            array('id' => HotelBookingDetail::WK_ROOM_PREFILLED_DEFAULT_OCCPANCY_NONE, 'name' => $this->l('Without Occupancy'))
+                        ),
+                        'identifier' => 'id',
+                    ),
                 ),
                 'submit' => array('title' => $this->l('Save'))
             ),

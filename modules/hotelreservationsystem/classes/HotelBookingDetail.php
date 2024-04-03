@@ -86,6 +86,10 @@ class HotelBookingDetail extends ObjectModel
     const PS_ROOM_UNIT_SELECTION_TYPE_OCCUPANCY = 1;
     const PS_ROOM_UNIT_SELECTION_TYPE_QUANTITY = 2;
 
+    // Default prefilled occupancy of the room.
+    const WK_ROOM_PREFILLED_DEFAULT_OCCPANCY_BASE = 1;
+    const WK_ROOM_PREFILLED_DEFAULT_OCCPANCY_NONE = 2;
+
     public static $definition = array(
         'table' => 'htl_booking_detail',
         'primary' => 'id',

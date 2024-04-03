@@ -192,8 +192,10 @@ class CategoryControllerCore extends FrontController
                         ),
                     );
 
-                    $roomTypeData['occupancies'] = $occupancy;
-                    $roomTypeData['occupancy_adults'] = $roomTypeData['adults']; // only one room by default
+                    if ((Configuration::get('WK_ROOM_PREFILLED_DEFAULT_OCCPANCY') == HotelBookingDetail::WK_ROOM_PREFILLED_DEFAULT_OCCPANCY_BASE)) {
+                        $roomTypeData['occupancies'] = $occupancy;
+                        $roomTypeData['occupancy_adults'] = $roomTypeData['adults']; // only one room by default
+                    }
                 }
             }
 
@@ -349,6 +351,24 @@ class CategoryControllerCore extends FrontController
                 }
 
                 array_multisort($indi_arr, $direction, $booking_data['rm_data']);
+            }
+
+            // set default occupancies in required format
+            if (isset($booking_data['rm_data']) && $booking_data['rm_data']) {
+                foreach ($booking_data['rm_data'] as &$roomTypeData) {
+                    $occupancy = array(
+                        array(
+                            'adults' => $roomTypeData['adults'],
+                            'children' => 0,
+                            'child_ages' => array(),
+                        ),
+                    );
+
+                    if ((Configuration::get('WK_ROOM_PREFILLED_DEFAULT_OCCPANCY') == HotelBookingDetail::WK_ROOM_PREFILLED_DEFAULT_OCCPANCY_BASE)) {
+                        $roomTypeData['occupancies'] = $occupancy;
+                        $roomTypeData['occupancy_adults'] = $roomTypeData['adults']; // only one room by default
+                    }
+                }
             }
 
             $this->context->smarty->assign(array('booking_data' => $booking_data));
