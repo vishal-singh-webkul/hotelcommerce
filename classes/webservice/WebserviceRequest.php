@@ -256,7 +256,7 @@ class WebserviceRequestCore
     {
         $resources = array(
             'addresses' => array('description' => 'The Customer, Manufacturer and Customer addresses','class' => 'Address'),
-            'bookings' => array('description' => 'Bookings', 'specific_management' => 'true'),
+            'bookings' => array('description' => 'Booking', 'specific_management' => 'true'),
             'carriers' => array('description' => 'The Carriers','class' => 'Carrier'),
             'carts' => array('description' => 'Customer\'s carts', 'class' => 'Cart'),
             'cart_rules' => array('description' => 'Cart rules management', 'class' => 'CartRule'),

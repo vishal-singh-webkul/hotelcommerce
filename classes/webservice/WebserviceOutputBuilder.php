@@ -626,7 +626,8 @@ class WebserviceOutputBuilderCore
                 }
                 $output_details = '';
                 foreach ($objects_assoc as $object_assoc) {
-                    if (!isset($association['resource']) && is_array($association)) {
+                    if (isset($association['single_entity']) && $association['single_entity']) {
+                        unset($association['single_entity']);
                         unset($association['getter']);
                         unset($association['setter']);
                         foreach ($association as $associationKey => $resource) {
@@ -645,10 +646,6 @@ class WebserviceOutputBuilderCore
                             $value = $object_assoc;
                         }
                         if (empty($fields_assoc)) {
-                            if(!isset($value['id'])) {
-                                $value['id'] = '';
-                            }
-
                             $fields_assoc = array(array('id' => $value['id']));
                         }
                         $output_details .= $this->renderFlatAssociation($object, $depth, $assoc_name, $association['resource'], $fields_assoc, $value, $parent_details);
@@ -708,26 +705,6 @@ class WebserviceOutputBuilderCore
                     $object_assoc,
                     $parent_details
                 );
-                if ($output_details != '') {
-                    $output .= $this->setIndent($depth).$this->objectRender->renderNodeHeader($field_name, array());
-                    $output .= $output_details;
-                    $output .= $this->setIndent($depth).$this->objectRender->renderNodeFooter($field_name, array());
-                } else {
-                    $output .= $this->setIndent($depth).$this->objectRender->renderNodeHeader($field_name, array());
-                }
-            } else if (!isset($field['type']) && is_array($field)) {
-                $output_details = '';
-                foreach ($field as $associationKey => $resources) {
-                    $resource = array();
-                    $resource['sqlId'] = $associationKey;
-                    $resource['value'] = null;
-                    if (!is_null($this->schemaToDisplay)) {
-                        $resource['synopsis_details'] = $this->getSynopsisDetails($resource);
-                    }
-
-                    $output_details .= $this->setIndent($depth - 1).$this->objectRender->renderField($resource);
-                }
-
                 if ($output_details != '') {
                     $output .= $this->setIndent($depth).$this->objectRender->renderNodeHeader($field_name, array());
                     $output .= $output_details;
