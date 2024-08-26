@@ -2369,7 +2369,7 @@ class HotelBookingDetail extends ObjectModel
         return Db::getInstance()->executeS($sql);
     }
 
-    public function UpdateHotelCartHotelOrderOnOrderEdit(
+    public function updateHotelCartHotelOrderOnOrderEdit(
         $idOrder,
         $idRoom,
         $oldDateFrom,
@@ -2377,11 +2377,10 @@ class HotelBookingDetail extends ObjectModel
         $newDateFrom,
         $newDateTo,
         $occupancy,
-        $newTotalPrice = null
+        $newTotalPrice = null,
+        $idHotelBookingDetail
     ) {
-        // retrieve HotelBookingDetail row
-        $roomBookingData = $this->getRoomBookingData($idRoom, $idOrder, $oldDateFrom, $oldDateTo);
-        $objHotelBookingDetail = new self($roomBookingData['id']);
+        $objHotelBookingDetail = new self((int) $idHotelBookingDetail);
         if (Validate::isLoadedObject($objHotelBookingDetail)) {
             // retrieve HotelCartBookingData row
             $idHotelCartBookingData = Db::getInstance()->getValue(
@@ -2747,9 +2746,6 @@ class HotelBookingDetail extends ObjectModel
 
             if (!$this->context->cart->id_address_invoice && isset($addresses[0])) {
                 $this->context->cart->id_address_invoice = (int)$addresses[0]['id_address'];
-            }
-            if (!$this->context->cart->id_address_delivery && isset($addresses[0])) {
-                $this->context->cart->id_address_delivery = $addresses[0]['id_address'];
             }
             $this->context->cart->setNoMultishipping();
 
@@ -3198,7 +3194,10 @@ class HotelBookingDetail extends ObjectModel
                     $this->id_room,
                     $this->date_from,
                     $this->date_to,
-                    0
+                    0,
+                    0,
+                    1,
+                    $this->id
                 )) {
                     foreach ($roomDemands as $roomDemand) {
                         $objHotelBookingDemands = new HotelBookingDemands($roomDemand['id_booking_demand']);
