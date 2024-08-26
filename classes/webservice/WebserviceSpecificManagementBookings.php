@@ -96,16 +96,15 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
                 'lastname' => array('type' => self::TYPE_STRING, 'required' => true),
                 'email' => array('type' => self::TYPE_STRING, 'required' => true),
                 'phone' => array('type' => self::TYPE_STRING, 'required' => true),
-                // @todo: do we really need address for the booking API.
-                // 'address' => array('type' => self::TYPE_STRING),
-                // 'city' => array('type' => self::TYPE_STRING),
-                // 'zip' => array('type' => self::TYPE_STRING),
-                // 'State_code' => array('type' => self::TYPE_STRING),
-                // 'country_code' => array('type' => self::TYPE_STRING),
+                'address' => array('type' => self::TYPE_STRING),
+                'city' => array('type' => self::TYPE_STRING),
+                'zip' => array('type' => self::TYPE_STRING),
+                'state_code' => array('type' => self::TYPE_STRING),
+                'country_code' => array('type' => self::TYPE_STRING),
             ),
             'price_details' => array(
                 'single_entity' => true,
-                'total_paid' => array('type' => self::TYPE_FLOAT),
+                'total_paid' => array('type' => self::TYPE_FLOAT, 'required' => true),
                 'total_price_with_tax' => array('type' => self::TYPE_FLOAT),
                 'total_tax' => array('type' => self::TYPE_FLOAT),
             ),
@@ -513,6 +512,10 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
             || (!Validate::isLoadedObject((new Currency(Currency::getIdByIsoCode($params['currency'])))))
         ) {
             $this->error_msg = Tools::displayError('Please provide valid currency for the booking');
+        } elseif (!isset($params['customer_detail'])
+            || !$params['customer_detail']
+        ) {
+            $this->error_msg = Tools::displayError('Customer details not found.');
         } else if (isset($params['customer_detail']['id_customer'])
             && $params['customer_detail']['id_customer']
             && !Validate::isLoadedObject(new Customer((int) $params['customer_detail']['id_customer']))
@@ -530,16 +533,26 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
             || empty(trim($params['customer_detail']['email']))
         ) {
             $this->error_msg = Tools::displayError('Please provide an email for the booking');
-        } else if (!isset($params['customer_detail']['phone'])
-            || empty(trim($params['customer_detail']['phone']))
+        } else if (Configuration::get('PS_ONE_PHONE_AT_LEAST')
+            && (!isset($params['customer_detail']['phone']) || empty(trim($params['customer_detail']['phone'])))
         ) {
             $this->error_msg = Tools::displayError('Please provide a phone number for the booking');
+        } else if (!$this->validateAddressFields($params['customer_detail'])
+            && $this->error_msg == ''
+        ) {
+            $this->error_msg = Tools::displayError('Invalid address provided');
         } else if (isset($params['id'])) {
             $this->error_msg = Tools::displayError('id is forbidden when adding a new resource');
         } else if (!$this->validateRequestedRoomTypes($params['room_types'])
             && $this->error_msg == ''
         ) {
-            $this->error_msg = Tools::displayError('Requested room not available');
+            $this->error_msg = Tools::displayError('Requested room(s) not available');
+        } else if (isset($params['payment_detail']['payment_type'])
+            && $params['payment_detail']['payment_type'] != 'online'
+            && $params['payment_detail']['payment_type'] != 'remote'
+            && $params['payment_detail']['payment_type'] != 'pay at hotel'
+        ) {
+            $this->error_msg = Tools::displayError('Invalid payment type');
         } else {
             $this->validatePostCartRules($params);
         }
@@ -549,6 +562,50 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
         }
 
         return false;
+    }
+
+    public function validateAddressFields($params)
+    {
+        $status = true;
+        if (isset($params['address'])
+            || isset($params['city'])
+            || isset($params['country_code'])
+            || isset($params['state_code'])
+            || isset($params['zip'])
+        ) {
+            $status = false;
+            if (!isset($params['address']) || !$params['address']) {
+                $this->error_msg = Tools::displayError('Address is required.');
+            } elseif (!isset($params['city']) || !$params['city']) {
+                $this->error_msg = Tools::displayError('City is required.');
+            } elseif (!isset($params['country_code']) || !$params['country_code']) {
+                $this->error_msg = Tools::displayError('Country code is required.');
+            } else if (!isset($params['address']) || !$params['address']) {
+                $this->error_msg = Tools::displayError('Address is required.');
+            } else if (!isset($params['country_code']) || !$params['country_code']) {
+                $this->error_msg = Tools::displayError('Country code is required.');
+            } else if (!$idCountry = Country::getByIso($params['country_code'])) {
+                $this->error_msg = Tools::displayError('Invalid country code.');
+            } else if (($objCountry = new Country($idCountry)) && $objCountry->contains_states
+                && (!isset($params['state_code']) || !$params['state_code'])
+            ) {
+                $this->error_msg = Tools::displayError('State code is required for the given country.');
+            } elseif ($objCountry->contains_states
+                && (!$idState = State::getIdByIso($params['state_code'], $objCountry->id))
+            ) {
+                $this->error_msg = Tools::displayError('Invalid state code.');
+            } else if ($objCountry->need_zip_code && (!isset($params['zip']) || !$params['zip'])) {
+                $this->error_msg = Tools::displayError('Zip code is required.');
+            } elseif ($objCountry->need_zip_code
+                && (!Validate::isPostCode($params['zip']) || ($objCountry->zip_code_format && !$objCountry->checkZipCode($params['zip'])))
+            ) {
+                $this->error_msg = sprintf(Tools::displayError('The Zip/Postal code you have entered is invalid. It must follow this format: %s'), str_replace('C', $objCountry->iso_code, str_replace('N', '0', str_replace('L', 'A', $objCountry->zip_code_format))));
+            } else {
+                $status = true;
+            }
+        }
+
+        return $status;
     }
 
     public function validateRequestedRoomTypes($roomTypes = array())
@@ -577,17 +634,14 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
                     );
                     if (($hotelRoomData = $objBookingDetail->dataForFrontSearch($bookingParams))
                         && isset($hotelRoomData['rm_data'][$roomType['id_room_type']]['data']['available'])
+                        && $hotelRoomData['rm_data'][$roomType['id_room_type']]['data']['available']
                     ) {
-                        if (isset($roomType['rooms']) && count($roomType['rooms'])) {
+                        if ($hotelRoomData['stats']['num_avail'] < $roomType['number_of_rooms']) {
+                            return false;
+                        } elseif (isset($roomType['rooms']) && count($roomType['rooms'])) {
                             foreach ($roomType['rooms'] as $room) {
                                 if (isset($room['id_room']) && !isset($hotelRoomData['rm_data'][$roomType['id_room_type']]['data']['available'][$room['id_room']])) {
                                     return false;
-                                } else if (!isset($room['id_room'])) {
-                                    if ($roomType['number_of_rooms']) {
-                                        $roomType['number_of_rooms']--;
-                                    } else {
-                                        return false;
-                                    }
                                 }
 
                                 if (isset($room['services']) && $room['services']
@@ -602,8 +656,6 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
                                     return false;
                                 }
                             }
-                        } else if ($hotelRoomData['stats']['num_avail'] < $roomType['number_of_rooms']) {
-                            return false;
                         }
                     } else {
                         return false;
@@ -686,6 +738,16 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
             && $params['payment_detail']['payment_method']
         ) {
             $objPaymentModule->displayName = $params['payment_detail']['payment_method'];
+        }
+
+        if (isset($params['payment_detail']['payment_type'])
+            && $params['payment_detail']['payment_type']
+        ) {
+            if ($params['payment_detail']['payment_type'] == 'remote') {
+                $objPaymentModule->payment_type = OrderPayment::PAYMENT_TYPE_REMOTE_PAYMENT;
+            } else if ($params['payment_detail']['payment_type'] == 'pay at hotel') {
+                $objPaymentModule->payment_type = OrderPayment::PAYMENT_TYPE_PAY_AT_HOTEL;
+            }
         }
 
         if ($objPaymentModule->validateOrder(
@@ -894,10 +956,46 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
             $this->bookingCustomer->save();
         }
 
-        //@todo: to be added after address pr is merged.
-        // if (isset($params['phone']) && Validate::isPhoneNumber($params['phone'])) {
-        //     CartCustomerGuestDetail::updateCustomerPhoneNumber($params['email'], $params['phone']);
-        // }
+        if (isset($params['country_code'])
+            && $params['country_code']
+        ) {
+            $params['id_country'] = Country::getByIso($params['country_code']);
+            $objCountry = new Country($params['id_country']);
+            if ($objCountry->contains_states) {
+                $params['id_state'] = State::getIdByIso($params['state_code']);
+            }
+
+            $active = true;
+            $cache_id = 'Address::getFirstCustomerAddressId_'.(int) $this->bookingCustomer->id.'-'.(bool)$active;
+            Cache::clean($cache_id);
+            if ($idAddress = Address::getFirstCustomerAddressId($this->bookingCustomer->id)) {
+                $objAddress = new Address((int) $idAddress);
+            } else {
+                $objAddress = new Address();
+                $objAddress->alias = 'Generated by bookings API';
+            }
+
+            $objAddress->id_customer = $this->bookingCustomer->id;
+            $objAddress->firstname = $params['firstname'];
+            $objAddress->lastname = $params['lastname'];
+            if (isset($params['phone'])) {
+                $objAddress->phone = $params['phone'];
+            }
+
+            $objAddress->auto_generated = true;
+            $objAddress->address1 = $params['address'];
+            $objAddress->city = $params['city'];
+            $objAddress->postcode = isset($params['zip']) ? $params['zip'] : '';
+            $objAddress->id_country = $params['id_country'];
+            $objAddress->id_state = isset($params['id_state']) ? $params['id_state'] : 0;
+
+            $objAddress->save();
+        }
+
+        if (isset($params['phone']) && Validate::isPhoneNumber($params['phone'])) {
+            CartCustomerGuestDetail::updateCustomerPhoneNumber($params['email'], $params['phone']);
+        }
+
         // to remove the older non ordered cart for this customer.
         $this->context->cookie->id_cart = $this->context->cart->id;
         $this->context->updateCustomer($this->bookingCustomer, 1);
@@ -945,7 +1043,7 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
                     $res = 0;
                 }
 
-                if (isset($this->wsObject->urlFragments['schema'])) {
+                if (isset($this->wsObject->urlFragments['schema']) && $this->wsObject->method == 'GET') {
                     if ($this->wsObject->urlFragments['schema'] == 'blank' || $this->wsObject->urlFragments['schema'] == 'synopsis') {
                         $res = null;
                     } else {
@@ -1118,6 +1216,17 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
         $this->roomWiseInfomation = array();
         $objRoomType = new HotelRoomType();
         $objHotelCartBookingData = new HotelCartBookingData();
+        if (defined('_PS_ADMIN_DIR_')) {
+            $PS_ROOM_UNIT_SELECTION_TYPE = Configuration::get('PS_BACKOFFICE_ROOM_BOOKING_TYPE');
+        } else {
+            $PS_ROOM_UNIT_SELECTION_TYPE = Configuration::get('PS_FRONT_ROOM_UNIT_SELECTION_TYPE');
+        }
+
+        $quantityType = false;
+        if ($PS_ROOM_UNIT_SELECTION_TYPE != HotelBookingDetail::PS_ROOM_UNIT_SELECTION_TYPE_OCCUPANCY) {
+            $quantityType = 'integer';
+        }
+
         foreach ($roomTypes as $roomType) {
             $dateFrom = date('Y-m-d', strtotime($roomType['checkin_date']));
             $dateTo = date('Y-m-d', strtotime($roomType['checkout_date']));
@@ -1158,6 +1267,10 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
                     $idRoom = 0;
                     if (isset($room['id_room'])) {
                         $idRoom = $room['id_room'];
+                    }
+
+                    if ($quantityType) {
+                        $occupancy = 1; // since we are adding rooms one by one into the cart.
                     }
 
                     if ($idHtlCartBookingData = $objHotelCartBookingData->updateCartBooking(
@@ -1209,6 +1322,10 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
                         $roomWiseOccupancy[] = reset($occupancy);
                         $roomType['number_of_rooms']--;
                     }
+                }
+
+                if ($quantityType) {
+                    $roomWiseOccupancy = count($roomWiseOccupancy);
                 }
 
                 $roomDemands = json_encode(array());
@@ -1275,12 +1392,15 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
                 1, // for auto added products
             )) {
                 foreach ($serviceProducts as $serviceProduct) {
+                    $dateJoinKey = strtotime($serviceProduct['date_from']).strtotime($serviceProduct['date_to']).$serviceProduct['id_room'];
                     if (isset($serviceProduct['selected_products_info']) && $serviceProduct['selected_products_info']) {
                         foreach ($serviceProduct['selected_products_info'] as $service) {
-                            if ($idRoomTypeServiceProductCartDetail = $objRoomTypeServiceProductCartDetail->alreadyExists(
+                            // Checking if the auto add service was sent in the request
+                            if (!isset($this->roomWiseInfomation[$dateJoinKey]['services'][$service['id_product']])
+                                && ($idRoomTypeServiceProductCartDetail = $objRoomTypeServiceProductCartDetail->alreadyExists(
                                 $service['id_product'],
                                 $this->context->cart->id,
-                                $serviceProduct['htl_cart_booking_id']
+                                $serviceProduct['htl_cart_booking_id'])
                             )) {
                                 $objRoomTypeServiceProductCartDetail = new RoomTypeServiceProductCartDetail((int) $idRoomTypeServiceProductCartDetail);
                                 $objRoomTypeServiceProductCartDetail->delete();
@@ -1347,7 +1467,7 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
         $roomsToAdd = $roomTypes;
         if ($roomsToAdd && !$this->validateRequestedRoomTypes($roomsToAdd)) {
             if ($this->error_msg == '') {
-                $this->error_msg = Tools::displayError('Requested room not available');
+                $this->error_msg = Tools::displayError('Requested room(s) not available');
             }
 
             return false;
@@ -2069,7 +2189,7 @@ class WebserviceSpecificManagementBookingsCore Extends ObjectModel implements We
         } else if (!$this->validatePutRequestRoomTypes($params['room_types'])
             && $this->error_msg == ''
         ) {
-            $this->error_msg = Tools::displayError('Requested room not available');
+            $this->error_msg = Tools::displayError('Requested room(s) not available');
         } else {
             $this->validatePutCartRules($params);
         }

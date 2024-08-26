@@ -712,7 +712,27 @@ class WebserviceOutputBuilderCore
                 } else {
                     $output .= $this->setIndent($depth).$this->objectRender->renderNodeHeader($field_name, array());
                 }
-            } else if (!is_array($this->fieldsToDisplay) || in_array($field_name, $this->fieldsToDisplay[$assoc_name])) {
+            // } else if (isset($field['type']) && is_array($field)) {
+            //     $output_details = '';
+            //     foreach ($field as $associationKey => $resources) {
+            //         $resource = array();
+            //         $resource['sqlId'] = $associationKey;
+            //         $resource['value'] = null;
+            //         if (!is_null($this->schemaToDisplay)) {
+            //             $resource['synopsis_details'] = $this->getSynopsisDetails($resource);
+            //         }
+
+            //         $output_details .= $this->setIndent($depth - 1).$this->objectRender->renderField($resource);
+            //     }
+
+            //     if ($output_details != '') {
+            //         $output .= $this->setIndent($depth).$this->objectRender->renderNodeHeader($field_name, array());
+            //         $output .= $output_details;
+            //         $output .= $this->setIndent($depth).$this->objectRender->renderNodeFooter($field_name, array());
+            //     } else {
+            //         $output .= $this->setIndent($depth).$this->objectRender->renderNodeHeader($field_name, array());
+            //     }
+            } elseif (!is_array($this->fieldsToDisplay) || in_array($field_name, $this->fieldsToDisplay[$assoc_name])) {
                 if (isset($field['id']) && !isset($field['sqlId'])) {
                     $field['sqlId'] = 'id';
                     $field['value'] = isset($object_assoc['id']) ? $object_assoc['id'] : null;
