@@ -353,6 +353,10 @@ function updateGridColumns() {
             item.style.gridColumn = `span ${getComputedStyle(item).getPropertyValue('--col-span')}`;
         });
     })
+
+    if (!$('.header-rmsearch-container').hasClass('initialized')) {
+        $('.header-rmsearch-container').show().addClass('initialized').animate({ opacity: 1 }, 300);
+    }
 }
 
 $(document).ready(function() {
