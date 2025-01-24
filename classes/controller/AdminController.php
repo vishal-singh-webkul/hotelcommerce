@@ -2224,6 +2224,8 @@ class AdminControllerCore extends Controller
         if (!$this->viewAccess()) {
             $this->errors[] = Tools::displayError('You do not have permission to view this.');
             return;
+        } else if ($this->action == 'export') {
+            return;
         }
 
         $this->getLanguages();
